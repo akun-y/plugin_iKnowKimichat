@@ -1,0 +1,3 @@
+paddleocr>=2.9.0
+albumentations>=1.4.18
+paddlepaddle>=2.6.2
