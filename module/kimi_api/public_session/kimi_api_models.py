@@ -12,6 +12,7 @@ import requests
 import json
 
 from common.log import logger
+from config import conf
 from .kimi_token_manager import ensure_access_token, tokens
 
 # 常量定义，用于HTTP请求头
@@ -81,12 +82,11 @@ def stream_chat_responses(chat_id, query, refs_list=None, use_search=True, new_c
 
     # 拼接url
     api_url = f"https://kimi.moonshot.cn/api/chat/{chat_id}/completion/stream"
-
     # 定义请求的载荷
     payload = {
-        "messages": [{"role": "user", "content": query}],
-        "refs": refs_list,
-        "use_search": use_search
+            "messages": [{"role": "user", "content": query}],
+            "refs": refs_list,
+            "use_search": use_search
     }
 
     full_response_text = ""

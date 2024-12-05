@@ -1,2 +1,7 @@
 __pycache__/
 config.json
+knowledge_files/潘潘答疑-去除重复及无效.txt
+knowledge_files/common_knowledge.txt
+module/kimi_api/knowledge/sessions/
+module/kimi_api/knowledge/kimi_cache.db
+module/kimi_api/knowledge/sessions_files/

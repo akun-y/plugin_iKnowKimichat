@@ -38,16 +38,17 @@ def ocr_PaddleOCR(img):
         return -1, "❌未识别到内容，请换一张图片重试"
     for i in range(len(result)):
         result_str += f"{result[i]}\n"
-    return 0, result_str
+    return 0, result_str,result
 
 def analyze_image_paddle(file_path):
    
     try:        
-        err_code, ocr_result = ocr_PaddleOCR(file_path)
+        err_code, ocr_result,ocr_result_list = ocr_PaddleOCR(file_path)
         logger.info(f"========>图片OCR结果：{ocr_result}")        
 
         return {
             "result": ocr_result,
+            "result_list": ocr_result_list,
             "type": "paddleocr",
             "code": err_code
         }

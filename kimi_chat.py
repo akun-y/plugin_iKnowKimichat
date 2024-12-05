@@ -15,9 +15,10 @@ from channel.chat_message import ChatMessage
 from common.expired_dict import ExpiredDict
 from plugins import *
 from plugins.plugin_kimichat.module.azure_image_recognition.azure_image_recognition import analyze_image
-from plugins.plugin_kimichat.module.kimi_api.kimi_token_manager import tokens, refresh_access_token
-from plugins.plugin_kimichat.module.kimi_api.kimi_api_models import create_new_chat_session, stream_chat_responses
-from plugins.plugin_kimichat.module.kimi_api.kimi_file_uploader import FileUploader
+from plugins.plugin_kimichat.module.kimi_api.knowledge.kimi_file_ctx import KimiFileContext
+from plugins.plugin_kimichat.module.kimi_api.public_session.kimi_api_models import create_new_chat_session, stream_chat_responses
+from plugins.plugin_kimichat.module.kimi_api.public_session.kimi_file_uploader import FileUploader
+from plugins.plugin_kimichat.module.kimi_api.public_session.kimi_token_manager import refresh_access_token, tokens
 from plugins.plugin_kimichat.module.paddleocr.paddleocr_image_recognition import analyze_image_paddle
 from plugins.plugin_kimichat.module.video_frame_manager.video_frame_manager import extract_and_save_key_frames
 from plugins.plugin_kimichat.module.video_to_text_transcriber.video_to_text_transcriber import transcribe_audio
@@ -43,7 +44,7 @@ class KimiChat(Plugin):
             logger.info(f"[KimiChat] 加载配置文件{config_path}")
             with open(config_path, "r", encoding="utf-8") as f:
                 conf = json.load(f)
-
+            self.config = conf
             # 确保必需的配置项存在
             if not conf.get("refresh_token"):
                 raise ValueError("配置文件中缺少 'refresh_token'")
@@ -71,6 +72,12 @@ class KimiChat(Plugin):
             self.kimi_reply_tips = conf.get("kimi_reply_tips", "")
             self.openai_api_url = conf.get("openai_api_url")
             self.openai_api_key = conf.get("openai_api_key")
+            
+            self.kimi_api_url = conf.get("kimi_api_url")
+            self.kimi_api_key = conf.get("kimi_api_key")
+            
+            self.kimi_chat_groups_list = conf.get("kimi_chat_groups_list", [])     
+            
             self.frames_to_extract = None
             self.current_context = None
             self.send_msg = create_channel_object()
@@ -148,10 +155,10 @@ class KimiChat(Plugin):
 
         handler_map = {
             (ContextType.SHARING, False): lambda: self._handle_sharing_context(user_id, content),
-            (ContextType.TEXT, False): lambda: self._handle_text_context(user_id, content, user_id),
+            (ContextType.TEXT, False): lambda: self._handle_text_context(user_id, content, msg),
             (ContextType.FILE, False): lambda: self._handle_file_context(user_id, content, msg),
             (ContextType.SHARING, True): lambda: self._handle_sharing_context(target_id, content),
-            (ContextType.TEXT, True): lambda: self._handle_text_context(target_id, content, user_id),
+            (ContextType.TEXT, True): lambda: self._handle_text_context(target_id, content, msg),
             (ContextType.FILE, True): lambda: self._handle_file_context(target_id, content, msg),
             (ContextType.IMAGE, False): lambda: self._handle_image_context(user_id, content, msg),
             (ContextType.IMAGE, True): lambda: self._handle_image_context(user_id, content, msg),
@@ -188,7 +195,7 @@ class KimiChat(Plugin):
             logger.info(f"[KimiChat] 没有开启分享链接解析功能，PASS！")
             return None
 
-    def _handle_text_context(self, session, content, user_id):
+    def _handle_text_context(self, session, content, msg):
         """
         处理文本对话的情况。
 
@@ -197,9 +204,15 @@ class KimiChat(Plugin):
         :return: 处理后的回复内容。
         """
         logger.info(f"[KimiChat] 开始判断并处理文本对话！")
-        keyword_prefix = self.keyword + " "  # 构建关键词前缀，包括一个空格
+        keyword_prefix = self.keyword # 构建关键词前缀，包括一个空格
         recognize_pictures_prompt_prefix = self.recognize_pictures_keyword + "要求 "
-
+        user_id = msg.from_user_id
+        user_nickname = msg.from_user_nickname
+        is_group = msg.is_group
+        is_at = msg.is_at
+        if self._is_allowed_kimi_group_chat(is_at, is_group, user_nickname):
+            kimi_file_ctx = KimiFileContext(self.config)
+            return kimi_file_ctx.proc_knowledge_chat(session, msg)
         # 检查内容是否以关键词+空格开头
         if content.startswith(keyword_prefix):
             # 去除关键词和紧随其后的空格
@@ -225,6 +238,24 @@ class KimiChat(Plugin):
 
         # 如果内容不符合任何条件，返回None
         return None
+
+    def _is_allowed_kimi_group_chat(self, is_at, is_group, user_nickname):
+        """
+        检查是否允许在群聊中响应
+        :param is_at: 是否被@
+        :param is_group: 是否是群聊
+        :param user_nickname: 用户昵称
+        :return: bool
+        """
+        if not (is_at and is_group):
+            return False
+        
+        if 'ALL_GROUP' in self.kimi_chat_groups_list:
+            return True
+        if user_nickname in self.kimi_chat_groups_list:
+            return True
+        
+        return False
 
     def _handle_file_context(self, user_id, content, msg):
         """
