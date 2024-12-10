@@ -1,3 +1,12 @@
+20241210:
+ 在原有基础上,新增几项功能:
+ 1. 增加使用 kimi api key 功能(这个key是收费的)
+ 2. 调用OCR,识别图片
+ 3. 本地做一个文件知识库,用户可根据需要手工更改知识库文件. #todo 后续要从服务器获取,可能会导致项目涉及其他模块.
+ 计划: #todo
+1. 自动整理汇集知识库,然kimi整理为system prompt 方便个性化用户应答.
+    
+
 ## 插件说明：
 代码来自: https://github.com/cheungchazz/cow_plugin_kimichat.git/
 [`国产模型kimi`](https://kimi.moonshot.cn/)插件，能力待挖掘，目前最优势的是超长上下文，先发个文件再问文件内容，很爽。
