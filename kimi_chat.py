@@ -122,7 +122,7 @@ class KimiChat(Plugin):
             logger.info(f"[KimiChat] 未触发KimiChat。")
             return
         elif rely_content == "无响应":
-            rely_content = "Kimi 现在有点累了，晚一点再来问问我吧！您也可以重置会话试试噢！"
+            rely_content = "AI 现在有点累了，晚一点再来问问我吧！您也可以重置会话试试噢！"
             logger.warn(f"[KimiChat] 没有获取到回复内容，请检查日志！")
 
         # 创建回复并设置事件的行为
@@ -269,18 +269,26 @@ class KimiChat(Plugin):
         if not self.file_upload or not check_file_format(content):
             logger.info(f"[KimiChat] 未开启文件识别或文件格式不支持，PASS！")
             return None
-        msg.prepare()
-        #self._send_msg(f"{self.kimi_reply_tips}\n☑正在给您解析文件并总结\n⏳整理内容需要点时间，请您耐心等待...")
-        uploader = FileUploader()
-        filename = os.path.basename(content)
-        file_id = uploader.upload(filename, content)
-        refs_list = [file_id]
-        chat_id, new_chat = self._get_or_create_chat_id(user_id)
-        rely_content = stream_chat_responses(chat_id, self.file_parsing_prompts, refs_list, new_chat)
-        if not rely_content:
-            return ""
-        else:
-            return rely_content
+
+        try:
+            msg.prepare()
+            #self._send_msg(f"{self.kimi_reply_tips}\n☑正在给您解析文件并总结\n⏳整理内容需要点时间，请您耐心等待...")
+            uploader = FileUploader()
+            filename = os.path.basename(content)
+            file_id = uploader.upload(filename, content)
+            if not file_id:
+                return "无响应"
+            refs_list = [file_id]
+            chat_id, new_chat = self._get_or_create_chat_id(user_id)
+            rely_content = stream_chat_responses(chat_id, self.file_parsing_prompts, refs_list, new_chat)
+            if not rely_content:
+                return "无响应"
+            else:
+                return rely_content
+        except Exception as e:
+            logger.error(f"[KimiChat] 文件解析失败，错误：{e}")
+            return "无响应"
+
 
     def _reset_chat_data(self, user_id):
         """
