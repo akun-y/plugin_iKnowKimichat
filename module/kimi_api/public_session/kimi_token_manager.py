@@ -53,13 +53,7 @@ def refresh_access_token():
         tokens['refresh_token'] = response_data.get("refresh_token", "")
         tokens['expires_at'] = int(time.time()) + 599  # 假设access_token有效期是10分钟
     else:
-<<<<<<< HEAD
-        logger.error(f"[KimiChat] 刷新access_token失败，状态码：{response.status_code}")
-        logger.error(headers)
-        logger.error(response)
-=======
         logger.error(f"[KimiChat] 刷新access_token失败，状态码：{response.status_code} ，响应内容：{response.text}")
->>>>>>> f160034 (fix: 增加错误处理)
 
 
 def ensure_access_token(func):
