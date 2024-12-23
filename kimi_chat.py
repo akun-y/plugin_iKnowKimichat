@@ -270,7 +270,7 @@ class KimiChat(Plugin):
             logger.info(f"[KimiChat] 未开启文件识别或文件格式不支持，PASS！")
             return None
         msg.prepare()
-        self._send_msg(f"{self.kimi_reply_tips}\n☑正在给您解析文件并总结\n⏳整理内容需要点时间，请您耐心等待...")
+        #self._send_msg(f"{self.kimi_reply_tips}\n☑正在给您解析文件并总结\n⏳整理内容需要点时间，请您耐心等待...")
         uploader = FileUploader()
         filename = os.path.basename(content)
         file_id = uploader.upload(filename, content)
@@ -278,7 +278,7 @@ class KimiChat(Plugin):
         chat_id, new_chat = self._get_or_create_chat_id(user_id)
         rely_content = stream_chat_responses(chat_id, self.file_parsing_prompts, refs_list, new_chat)
         if not rely_content:
-            return "无响应"
+            return ""
         else:
             return rely_content
 
