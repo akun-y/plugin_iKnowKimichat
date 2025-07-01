@@ -135,5 +135,5 @@ class KimiFileContext:
         
         except Exception as e:
             logger.error(f"[KimiFileContext] 处理知识库聊天失败: {e}")
-            return "处理知识库聊天失败"
+            return None
         

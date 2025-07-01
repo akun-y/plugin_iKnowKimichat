@@ -8,6 +8,7 @@ Description:
 
 """
 
+import time
 import plugins
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
@@ -272,22 +273,23 @@ class KimiChat(Plugin):
 
         try:
             msg.prepare()
+            time.sleep(3)
             #self._send_msg(f"{self.kimi_reply_tips}\n☑正在给您解析文件并总结\n⏳整理内容需要点时间，请您耐心等待...")
             uploader = FileUploader()
             filename = os.path.basename(content)
             file_id = uploader.upload(filename, content)
             if not file_id:
-                return "无响应"
+                return None
             refs_list = [file_id]
             chat_id, new_chat = self._get_or_create_chat_id(user_id)
             rely_content = stream_chat_responses(chat_id, self.file_parsing_prompts, refs_list, new_chat)
             if not rely_content:
-                return "无响应"
+                return None
             else:
                 return rely_content
         except Exception as e:
             logger.error(f"[KimiChat] 文件解析失败，错误：{e}")
-            return "无响应"
+            return None
 
 
     def _reset_chat_data(self, user_id):
