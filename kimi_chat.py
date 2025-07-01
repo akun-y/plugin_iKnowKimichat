@@ -25,6 +25,7 @@ from plugins.plugin_kimichat.module.video_frame_manager.video_frame_manager impo
 from plugins.plugin_kimichat.module.video_to_text_transcriber.video_to_text_transcriber import transcribe_audio
 from plugins.plugin_kimichat.prompts.image_recognition import image_recognition_prompt, image_character_prompt
 from plugins.plugin_kimichat.prompts.video_recognition import video_character_prompt, video_recognition_prompt
+from common.log import logger
 
 
 @plugins.register(
@@ -40,7 +41,7 @@ class KimiChat(Plugin):
         super().__init__()
         self.chat_data = {}
         try:
-            curdir = os.path.dirname(__file__)
+            curdir = os.path.dirname(__file__) 
             config_path = os.path.join(curdir, "config.json")
             logger.info(f"[KimiChat] 加载配置文件{config_path}")
             with open(config_path, "r", encoding="utf-8") as f:
